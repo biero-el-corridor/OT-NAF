@@ -28,6 +28,7 @@ def Protocol_Filter(packet):
     try:
         
         packt = packet[Raw].load 
+        
         #if ord(packt[2:3]) == 0 and ord(packt[3:4]) == 0 and packt[7] in ModbusFunctionsCodeNumber:
         if dport == 502:
             #print("ffff")

@@ -18,7 +18,7 @@ récuperer les élément constater
 
 """
 
-
+runner = 0
 
 
 # basif fo all of the modbus packet
@@ -136,11 +136,6 @@ def add_element_in_file(UID,functions_name,filename):
                                 print("error in the writing")
             else:
                 print("")
-        """
-        if "q3" not in data["Modbus"][keys]:
-            dict_example2 = {"qsfsdfsdfsdfsddf":"TEST","TOMATE":"PATATE"}
-            data['Modbus'][keys]["q3"]=dict_example2 
-        """
                     
         #print(data)
         json_object = json.dumps(data, indent=4)
@@ -153,26 +148,29 @@ def parse_modbus(packt,Request,Response):
         # verify if result file exist
         #check_if_file_exist("b.json")
         
-        Transactions_Identifier = ord(packt[0:1])*256 + ord(packt[1:2])
-        Protocol_Identifier     = 0
-        Lenght                  = ord(packt[5:6])
-        Unit_Identifier         = packt[6]
         Functions_code_sniffed  = packt[7]
 
-        # Very Verbose 
-        # define the structure of the Modbus/TCP
-        # print("Transactions Identifier: ", Transactions_Identifier)  # transactions identifier
-        # print("Protocol Identifier:     ", Protocol_Identifier )     # protocol identifier (is already tcheked before entering)
-        # print("Lenght:                  ", Lenght)                   # lenght
-        # print("Unit Identifier:         ", Unit_Identifier)          # Unit identifier                       
-        # search and define the functions code found
-
+        """
         # test pkt send of offensif modbus
-        pkt = IP(src="192.168.90.116",dst="192.168.92.2")/TCP(window=502,sport=37927,dport=502,flags=tcp_flags)/ModbusTCP()/Write_Single_Coil_Modbus()
-        sr1(pkt) 
+        #pkt = IP(src="192.168.90.116",dst="192.168.92.2")/TCP(window=502,sport=37927,dport=502,flags=tcp_flags)/ModbusTCP()/Write_Single_Coil_Modbus()
+        #sr1(pkt) 
+        """
 
         if Functions_code_sniffed == 5 and Request == True:
         
+            Transactions_Identifier = ord(packt[0:1])*256 + ord(packt[1:2])
+            Protocol_Identifier     = 0
+            Lenght                  = ord(packt[5:6])
+            Unit_Identifier         = packt[6]
+            
+            # Very Verbose 
+            # define the structure of the Modbus/TCP
+            # print("Transactions Identifier: ", Transactions_Identifier)  # transactions identifier
+            # print("Protocol Identifier:     ", Protocol_Identifier )     # protocol identifier (is already tcheked before entering)
+            # print("Lenght:                  ", Lenght)                   # lenght
+            # print("Unit Identifier:         ", Unit_Identifier)          # Unit identifier                       
+            # search and define the functions code found
+
             Reference_Number = ord(packt[8:9])*256   + ord(packt[9:10])
             Data             = ord(packt[10:11])*256 + ord(packt[11:12])
             # check if uid alredy exist
@@ -182,23 +180,50 @@ def parse_modbus(packt,Request,Response):
             # verifiy if elemnt is in the result json
             add_element_in_file(Unit_Identifier,list(Functions_code.keys())[list(Functions_code.values()).index(Functions_code_sniffed)], "modbus.json")
              
-            
             #print("Bit Count: ", packt[11]) 
             #print("Reference Number:   " ,  Reference_Number) # The Data Address of the coil
             #print("Data:               " ,  Data) # Value of the single coil
 
         if Functions_code_sniffed == 15 and Request == True:
-            # try to count the number of coil writen 
-            
-            Payload_size = len(packt[TCP].payload)
-            number_of_coil_writen = Payload_size / 14
-            # round to the sup int because the lenght who whas devided the payload lenght 
-            # is the max lenght possible (15) when the minimum legnt possible is (14) 
+            """
+            le concept et le suivant 
 
-            # need to reparse the tcp value 
+            récuperer lentiéretée de la partie tcp du packet 
+            """
+            runner = 0
 
             number_of_coil_writen = round(number_of_coil_writen)
-            while number_of_coil_writen != 0: 
-            Reference_Number = ord(packt[8:9])*256   + ord(packt[9:10])
-            Data             = ord(packt[10:11])*256 + ord(packt[11:12])
-            pass
+
+            chk = True
+            while chk: 
+                # va boucler dans les différent packet modbus
+                # modbus TCP
+                # modbus/TCP iterations 
+                Transactions_Identifier = ord(packt[runner:runner+1])*256 + ord(packt[runner+1:runner+2])
+                Protocol_Identifier     = 0
+                
+                # il faust se baser sur la taille
+                Lenght                  = ord(packt[runner+5:runner+6])
+                lenght_of_data          = lenght_of_data
+                Unit_Identifier         = packt[runner+6]
+                
+                # modbus iterations
+                Functions_code_sniffed  = packt[runner+7]
+                Reference_Number        = ord(packt[runner+8:runner+9])*256   + ord(packt[runner+9:runner+10])
+                Bit_Count               = ord(packt[runner+10:runner+11])*256   + ord(packt[runner+11:runner+12])
+                Byte_Count              = packt[runner+13]
+
+                # verifier la taille de de data (elle peut flucturer )
+                if Lenght % 2 == 0:
+                    Data                = ord(packt[runner+14])
+                    runner += 14
+                    
+                else:
+                    Data                = ord(packt[runner+13:runner+14])*256   + ord(packt[runner+14:runner+15])
+                    runner += 15
+                
+                # verifier si il y en  encore 
+                if packt[runner+1] == 15: 
+                    pass
+                else: 
+                    chk = False
