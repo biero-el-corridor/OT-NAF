@@ -4,20 +4,12 @@
             "q1": {
                 "UID": 0,
                 "REGISTER": 0
-            },
-            "q2": {
-                "UID": "1",
-                "REGISTER": "40"
             }
         },
         "WRITE_MULT_COILS": {
             "q1": {
                 "UID": 0,
                 "REGISTER": 0
-            },
-            "q2": {
-                "UID": "1",
-                "REGISTER": "4"
             }
         },
         "WRITE_SINGLE_REG": {
